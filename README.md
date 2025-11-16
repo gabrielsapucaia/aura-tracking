@@ -1,36 +1,72 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+## Aura Dashboard
 
-## Getting Started
+Internal operations dashboard built with Next.js App Router, Supabase, and Tailwind. Upcoming work adds secure Microsoft OAuth login plus role-based access control (RBAC) so that only authorized operators can change sensitive data.
 
-First, run the development server:
+## Requirements
+
+- Node 20+
+- pnpm 9+
+- Supabase project (SQL + Auth)
+- Azure AD tenant (for Microsoft OAuth)
+
+## Environment Variables
+
+Copy `.env.example` to `.env.local` and fill the values:
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+cp .env.example .env.local
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+| Variable | Description |
+| --- | --- |
+| `NEXT_PUBLIC_SUPABASE_URL` | Supabase project URL. |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Supabase anon key (safe for browser). |
+| `SUPABASE_SERVICE_ROLE_KEY` | Service role key used by server actions. Keep private. |
+| `SUPABASE_AUTH_MICROSOFT_CLIENT_ID` | Azure AD application (client) ID used by Supabase Auth. |
+| `SUPABASE_AUTH_MICROSOFT_CLIENT_SECRET` | Azure AD client secret. |
+| `SUPABASE_AUTH_REDIRECT_URI` | Usually `https://<project-ref>.supabase.co/auth/v1/callback`. |
+| `NEXT_PUBLIC_SITE_URL` | Base URL of this Next.js app (used for redirects). |
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+> Run the SQL migrations inside `supabase/sql/` (operators + user_roles) in your Supabase project to align the schema.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Microsoft OAuth Setup
 
-## Learn More
+1. **Azure AD application**
+	- Register a new app in [Azure Portal](https://portal.azure.com/#view/Microsoft_AAD_IAM/ActiveDirectoryMenuBlade/~/RegisteredApps).
+	- Supported account types: “Accounts in this organizational directory only”.
+	- Redirect URI: `https://<project-ref>.supabase.co/auth/v1/callback` (Web).
+	- Copy the **Application (client) ID** and create a **client secret**.
 
-To learn more about Next.js, take a look at the following resources:
+2. **Supabase Auth provider**
+	- In Supabase Dashboard → Authentication → Providers → Microsoft.
+	- Paste the Azure client ID and secret.
+	- (Optional) set the **Site URL** to your production domain or `http://localhost:3000` for dev.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+3. **Next.js configuration**
+	- Ensure `.env.local` contains the Azure credentials.
+	- Future middleware will redirect anonymous users to `/login`, which uses the Supabase Auth UI to trigger the Microsoft sign-in flow.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Development
 
-## Deploy on Vercel
+Install dependencies and start the dev server:
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+```bash
+pnpm install
+pnpm dev
+```
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Testing & Quality
+
+- `pnpm test` – run Vitest unit tests.
+- `pnpm lint` – run ESLint.
+- `pnpm build` – Next.js production build (includes type-checking).
+
+## Roadmap Snapshot
+
+- [ ] Microsoft OAuth login screen (`/login`).
+- [ ] Middleware to guard private routes.
+- [ ] `user_roles` / permissions tables in Supabase.
+- [ ] UI for assigning roles & permissions.
+- [ ] Audit log viewer in the sidebar.
+
+See `supabase/sql/` for schema changes and keep `.env.example` up to date as new secrets are introduced.

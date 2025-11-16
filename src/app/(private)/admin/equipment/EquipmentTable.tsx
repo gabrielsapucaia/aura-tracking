@@ -3,9 +3,9 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import type { OperatorRecord } from "@/lib/supabase/types";
-import { type OperatorFormValues } from "@/lib/validators/operators";
-import { OperatorFormDialog } from "./OperatorFormDialog";
+import type { EquipmentRecord } from "@/lib/supabase/types";
+import { type EquipmentFormValues } from "@/lib/validators/equipment";
+import { EquipmentFormDialog } from "./EquipmentFormDialog";
 import { ConfirmDialog } from "./ConfirmDialog";
 import { useToast } from "@/components/ui/use-toast";
 import { useRouter } from "next/navigation";
@@ -17,47 +17,49 @@ const formatter = new Intl.DateTimeFormat("pt-BR", {
   timeStyle: "short",
 });
 
-type OperatorRow = OperatorRecord;
+type EquipmentRow = EquipmentRecord & {
+  equipment_types?: { name: string } | null;
+};
 
-type OperatorActionInput = {
-  name: string;
-  pin: string;
+type EquipmentActionInput = {
+  tag: string;
+  type_id: string | null | undefined;
   status: "active" | "inactive";
 };
 
-type OperatorUpdateInput = Partial<OperatorActionInput>;
+type EquipmentUpdateInput = Partial<EquipmentActionInput>;
 
-type OperatorsTableProps = {
-  data: OperatorRow[];
-  onCreate: (input: OperatorActionInput) => Promise<void>;
-  onUpdate: (id: number, input: OperatorUpdateInput) => Promise<void>;
-  onToggle: (id: number) => Promise<void>;
-  onDelete: (id: number) => Promise<void>;
+type EquipmentTableProps = {
+  data: EquipmentRow[];
+  onCreate: (input: EquipmentActionInput) => Promise<void>;
+  onUpdate: (id: string, input: EquipmentUpdateInput) => Promise<void>;
+  onToggle: (id: string) => Promise<void>;
+  onDelete: (id: string) => Promise<void>;
 };
 
 type DialogState =
   | { mode: "create" }
-  | { mode: "edit"; operator: OperatorRow };
+  | { mode: "edit"; equipment: EquipmentRow };
 
 type PendingAction =
   | { type: "form" }
-  | { type: "toggle" | "delete"; id: number };
+  | { type: "toggle" | "delete"; id: string };
 
-export function OperatorsTable({ data, onCreate, onUpdate, onToggle, onDelete }: OperatorsTableProps) {
+export function EquipmentTable({ data, onCreate, onUpdate, onToggle, onDelete }: EquipmentTableProps) {
   const router = useRouter();
   const { toast } = useToast();
   const [dialogState, setDialogState] = useState<DialogState | null>(null);
-  const [confirmOperator, setConfirmOperator] = useState<OperatorRow | null>(null);
+  const [confirmEquipment, setConfirmEquipment] = useState<EquipmentRow | null>(null);
   const [pendingAction, setPendingAction] = useState<PendingAction | null>(null);
-  const [optimistic, setOptimistic] = useState<Record<number, { status: "active" | "inactive"; loading: boolean }>>({});
+  const [optimistic, setOptimistic] = useState<Record<string, { status: "active" | "inactive"; loading: boolean }>>({});
 
   // UI state: search/filter/sort
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<"all" | "active" | "inactive">("all");
-  const [sortBy, setSortBy] = useState<"seq_id" | "name" | "created_at">("seq_id");
+  const [sortBy, setSortBy] = useState<"seq_id" | "tag" | "created_at">("seq_id");
   const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
 
-  const visibleOperators = useMemo(() => {
+  const visibleEquipment = useMemo(() => {
     const q = search.trim().toLowerCase();
     let list = data.slice();
 
@@ -69,8 +71,8 @@ export function OperatorsTable({ data, onCreate, onUpdate, onToggle, onDelete }:
       list = list.filter((r) => {
         return (
           String(r.id).toLowerCase().includes(q) ||
-          (r.name || "").toLowerCase().includes(q) ||
-          (r.pin || "").toLowerCase().includes(q)
+          (r.tag || "").toLowerCase().includes(q) ||
+          (r.equipment_types?.name || "").toLowerCase().includes(q)
         );
       });
     }
@@ -79,14 +81,14 @@ export function OperatorsTable({ data, onCreate, onUpdate, onToggle, onDelete }:
       const dir = sortDir === "asc" ? 1 : -1;
       if (sortBy === "seq_id") return ((a.seq_id ?? 0) - (b.seq_id ?? 0)) * dir;
       if (sortBy === "created_at") return (new Date(a.created_at).getTime() - new Date(b.created_at).getTime()) * dir;
-      return a.name.localeCompare(b.name) * dir;
+      return a.tag.localeCompare(b.tag) * dir;
     });
 
     return list;
   }, [data, search, statusFilter, sortBy, sortDir]);
 
   const isFormLoading = pendingAction?.type === "form";
-  const isRowLoading = (id: number, type: "toggle" | "delete") => pendingAction?.type === type && pendingAction.id === id;
+  const isRowLoading = (id: string, type: "toggle" | "delete") => pendingAction?.type === type && pendingAction.id === id;
 
   const handleSuccess = (message: string) => {
     toast({ title: message });
@@ -101,42 +103,46 @@ export function OperatorsTable({ data, onCreate, onUpdate, onToggle, onDelete }:
     });
   };
 
-  const submitForm = async (values: OperatorFormValues) => {
+  const submitForm = async (values: EquipmentFormValues) => {
     setPendingAction({ type: "form" });
     try {
-      if (dialogState?.mode === "edit" && dialogState.operator) {
-        await onUpdate(dialogState.operator.id, values);
-        handleSuccess("Operador atualizado");
+      const payload = {
+        ...values,
+        type_id: values.type_id === "none" ? null : values.type_id,
+      };
+      if (dialogState?.mode === "edit" && dialogState.equipment) {
+        await onUpdate(dialogState.equipment.id, payload);
+        handleSuccess("Equipamento atualizado");
       } else {
-        await onCreate(values);
-        handleSuccess("Operador criado");
+        await onCreate(payload);
+        handleSuccess("Equipamento criado");
       }
       setDialogState(null);
     } catch (error) {
-      handleError("Falha ao salvar operador", error);
+      handleError("Falha ao salvar equipamento", error);
       throw error;
     } finally {
       setPendingAction(null);
     }
   };
 
-  const handleToggle = async (operator: OperatorRow) => {
-    const nextStatus = operator.status === "active" ? "inactive" : "active";
+  const handleToggle = async (equipment: EquipmentRow) => {
+    const nextStatus = equipment.status === "active" ? "inactive" : "active";
 
     // optimistic update
-    setOptimistic((s) => ({ ...s, [operator.id]: { status: nextStatus, loading: true } }));
-    setPendingAction({ type: "toggle", id: operator.id });
+    setOptimistic((s) => ({ ...s, [equipment.id]: { status: nextStatus, loading: true } }));
+    setPendingAction({ type: "toggle", id: equipment.id });
 
     try {
-      await onToggle(operator.id);
+      await onToggle(equipment.id);
       // keep optimistic state but clear loading
-      setOptimistic((s) => ({ ...s, [operator.id]: { status: nextStatus, loading: false } }));
-      handleSuccess(nextStatus === "active" ? "Operador ativado" : "Operador desativado");
+      setOptimistic((s) => ({ ...s, [equipment.id]: { status: nextStatus, loading: false } }));
+      handleSuccess(nextStatus === "active" ? "Equipamento ativado" : "Equipamento desativado");
       // allow server components to revalidate and then clear optimistic state shortly after
       setTimeout(() => {
         setOptimistic((s) => {
           const copy = { ...s };
-          delete copy[operator.id];
+          delete copy[equipment.id];
           return copy;
         });
       }, 800);
@@ -144,7 +150,7 @@ export function OperatorsTable({ data, onCreate, onUpdate, onToggle, onDelete }:
       // revert optimistic on error
       setOptimistic((s) => {
         const copy = { ...s };
-        delete copy[operator.id];
+        delete copy[equipment.id];
         return copy;
       });
       handleError("Erro ao alternar status", error);
@@ -154,14 +160,14 @@ export function OperatorsTable({ data, onCreate, onUpdate, onToggle, onDelete }:
   };
 
   const handleDelete = async () => {
-    if (!confirmOperator) return;
-    setPendingAction({ type: "delete", id: confirmOperator.id });
+    if (!confirmEquipment) return;
+    setPendingAction({ type: "delete", id: confirmEquipment.id });
     try {
-      await onDelete(confirmOperator.id);
-      handleSuccess("Operador removido");
-      setConfirmOperator(null);
+      await onDelete(confirmEquipment.id);
+      handleSuccess("Equipamento removido");
+      setConfirmEquipment(null);
     } catch (error) {
-      handleError("Erro ao remover operador", error);
+      handleError("Erro ao remover equipamento", error);
     } finally {
       setPendingAction(null);
     }
@@ -172,13 +178,13 @@ export function OperatorsTable({ data, onCreate, onUpdate, onToggle, onDelete }:
       <Card className="rounded-xl border border-gray-100 shadow-md">
         <CardHeader className="flex flex-row items-center justify-between">
           <div>
-            <p className="text-xs uppercase tracking-[0.3em] text-gray-400">Operadores</p>
-            <CardTitle className="text-xl font-semibold text-gray-900">Equipe atual</CardTitle>
+            <p className="text-xs uppercase tracking-[0.3em] text-gray-400">Equipamentos</p>
+            <CardTitle className="text-xl font-semibold text-gray-900">Lista de Equipamentos</CardTitle>
           </div>
             <div className="flex items-center gap-3">
               <input
-                aria-label="Pesquisar operadores"
-                placeholder="Pesquisar por nome, id ou PIN"
+                aria-label="Pesquisar equipamentos"
+                placeholder="Pesquisar por tag, id ou tipo"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 className="px-3 py-2 border rounded-md text-sm"
@@ -194,7 +200,7 @@ export function OperatorsTable({ data, onCreate, onUpdate, onToggle, onDelete }:
                 <option value="inactive">Inativos</option>
               </select>
               <Button onClick={() => setDialogState({ mode: "create" })} size="sm">
-                <Plus className="mr-2 size-4" /> Novo operador
+                <Plus className="mr-2 size-4" /> Novo equipamento
               </Button>
             </div>
         </CardHeader>
@@ -210,12 +216,12 @@ export function OperatorsTable({ data, onCreate, onUpdate, onToggle, onDelete }:
                 </TableHead>
                 <TableHead className="text-center">Status</TableHead>
                 <TableHead className="cursor-pointer" onClick={() => {
-                    if (sortBy === 'name') setSortDir(d => d === 'asc' ? 'desc' : 'asc');
-                    else { setSortBy('name'); setSortDir('asc'); }
+                    if (sortBy === 'tag') setSortDir(d => d === 'asc' ? 'desc' : 'asc');
+                    else { setSortBy('tag'); setSortDir('asc'); }
                   }}>
-                  Nome {sortBy === 'name' ? (sortDir === 'asc' ? '▲' : '▼') : null}
+                  Tag {sortBy === 'tag' ? (sortDir === 'asc' ? '▲' : '▼') : null}
                 </TableHead>
-                <TableHead className="text-center">PIN</TableHead>
+                <TableHead>Tipo</TableHead>
                 <TableHead className="cursor-pointer" onClick={() => {
                     if (sortBy === 'created_at') setSortDir(d => d === 'asc' ? 'desc' : 'asc');
                     else { setSortBy('created_at'); setSortDir('asc'); }
@@ -226,14 +232,14 @@ export function OperatorsTable({ data, onCreate, onUpdate, onToggle, onDelete }:
               </TableRow>
             </TableHeader>
             <TableBody>
-              {visibleOperators.map((operator) => (
-                <TableRow key={operator.id} className="border-gray-100">
-                  <TableCell className="font-semibold text-gray-800">{operator.seq_id ?? "—"}</TableCell>
+              {visibleEquipment.map((equipment) => (
+                <TableRow key={equipment.id} className="border-gray-100">
+                  <TableCell className="font-semibold text-gray-800">{equipment.seq_id ?? "—"}</TableCell>
                   <TableCell className="text-center">
                     {(() => {
-                      const opt = optimistic[operator.id];
-                      const displayStatus = opt ? opt.status : operator.status;
-                      const loading = Boolean(opt?.loading) || isRowLoading(operator.id, "toggle");
+                      const opt = optimistic[equipment.id];
+                      const displayStatus = opt ? opt.status : equipment.status;
+                      const loading = Boolean(opt?.loading) || isRowLoading(equipment.id, "toggle");
 
                       return (
                         <button
@@ -241,11 +247,11 @@ export function OperatorsTable({ data, onCreate, onUpdate, onToggle, onDelete }:
                           aria-checked={displayStatus === "active"}
                           tabIndex={0}
                           aria-label={displayStatus === "active" ? "Desativar" : "Ativar"}
-                          onClick={() => handleToggle(operator)}
+                          onClick={() => handleToggle(equipment)}
                           onKeyDown={(e) => {
                             if (e.key === "Enter" || e.key === " ") {
                               e.preventDefault();
-                              handleToggle(operator);
+                              handleToggle(equipment);
                             }
                           }}
                           disabled={loading}
@@ -284,10 +290,10 @@ export function OperatorsTable({ data, onCreate, onUpdate, onToggle, onDelete }:
                       );
                     })()}
                   </TableCell>
-                  <TableCell className="text-gray-700">{operator.name}</TableCell>
-                  <TableCell className="text-center font-mono text-sm text-gray-900">{operator.pin}</TableCell>
+                  <TableCell className="text-gray-700">{equipment.tag}</TableCell>
+                  <TableCell className="text-gray-700">{equipment.equipment_types?.name || "—"}</TableCell>
                   <TableCell className="text-gray-500">
-                    {operator.created_at ? formatter.format(new Date(operator.created_at)) : "—"}
+                    {equipment.created_at ? formatter.format(new Date(equipment.created_at)) : "—"}
                   </TableCell>
                   <TableCell>
                     <div className="flex justify-end gap-2">
@@ -297,7 +303,7 @@ export function OperatorsTable({ data, onCreate, onUpdate, onToggle, onDelete }:
                         size="icon"
                         className="h-8 w-8"
                         aria-label="Editar"
-                        onClick={() => setDialogState({ mode: "edit", operator })}
+                        onClick={() => setDialogState({ mode: "edit", equipment })}
                       >
                         <Pencil className="size-4" />
                       </Button>
@@ -306,8 +312,8 @@ export function OperatorsTable({ data, onCreate, onUpdate, onToggle, onDelete }:
                         size="icon"
                         className="h-8 w-8 text-danger"
                         aria-label="Excluir"
-                        disabled={isRowLoading(operator.id, "delete")}
-                        onClick={() => setConfirmOperator(operator)}
+                        disabled={isRowLoading(equipment.id, "delete")}
+                        onClick={() => setConfirmEquipment(equipment)}
                       >
                         <Trash2 className="size-4" />
                       </Button>
@@ -315,10 +321,10 @@ export function OperatorsTable({ data, onCreate, onUpdate, onToggle, onDelete }:
                   </TableCell>
                 </TableRow>
               ))}
-              {visibleOperators.length === 0 && (
+              {visibleEquipment.length === 0 && (
                 <TableRow>
                   <TableCell colSpan={6} className="py-12 text-center text-sm text-gray-400">
-                    Nenhum operador encontrado
+                    Nenhum equipamento encontrado
                   </TableCell>
                 </TableRow>
               )}
@@ -327,11 +333,11 @@ export function OperatorsTable({ data, onCreate, onUpdate, onToggle, onDelete }:
         </CardContent>
       </Card>
 
-      <OperatorFormDialog
+      <EquipmentFormDialog
         open={dialogState !== null}
         mode={dialogState?.mode ?? "create"}
-        initialValues={dialogState && dialogState.mode === "edit" ? dialogState.operator : undefined}
-        onOpenChange={(open) => {
+        initialValues={dialogState && dialogState.mode === "edit" ? dialogState.equipment : undefined}
+        onOpenChange={(open: boolean) => {
           if (!open) setDialogState(null);
         }}
         loading={isFormLoading}
@@ -339,14 +345,14 @@ export function OperatorsTable({ data, onCreate, onUpdate, onToggle, onDelete }:
       />
 
       <ConfirmDialog
-        open={confirmOperator !== null}
-        onOpenChange={(open) => {
-          if (!open) setConfirmOperator(null);
+        open={confirmEquipment !== null}
+        onOpenChange={(open: boolean) => {
+          if (!open) setConfirmEquipment(null);
         }}
-        title="Remover operador?"
-        description={`Essa ação removerá ${confirmOperator?.name ?? "o operador"}.`}
+        title="Remover equipamento?"
+        description={`Essa ação removerá ${confirmEquipment?.tag ?? "o equipamento"}.`}
         confirmLabel="Excluir"
-        loading={confirmOperator ? isRowLoading(confirmOperator.id, "delete") : false}
+        loading={confirmEquipment ? isRowLoading(confirmEquipment.id, "delete") : false}
         onConfirm={handleDelete}
       />
     </>

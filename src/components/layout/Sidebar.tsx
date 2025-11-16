@@ -1,11 +1,13 @@
 "use client";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutDashboard, Settings, Users } from "lucide-react";
+import { LayoutDashboard, Settings, Users, Wrench, Tag } from "lucide-react";
 
 const items = [
   { href: "/dashboard", icon: LayoutDashboard, label: "Dashboard" },
   { href: "/admin/operators", icon: Users, label: "Operators", badge: "NEW" },
+  { href: "/admin/equipment_types", icon: Tag, label: "Tipos de Equipamento" },
+  { href: "/admin/equipment", icon: Wrench, label: "Equipamentos" },
   { href: "/settings", icon: Settings, label: "Settings" },
 ];
 
@@ -17,7 +19,10 @@ export function Sidebar(){
       <div className="text-xl font-semibold text-white mb-8">Minimal Dashboard</div>
       <nav className="flex flex-col gap-1 text-sm font-medium">
         {items.map(({ href, icon: Icon, label, badge }) => {
-          const isActive = path ? path.startsWith(href) : false;
+          // Only mark an item as active if the current path equals the
+          // item href, or if it is a deeper route under the item href
+          // (e.g. href === '/admin/equipment' should match '/admin/equipment/123')
+          const isActive = path ? path === href || path.startsWith(`${href}/`) : false;
           return (
             <Link
               key={href}
