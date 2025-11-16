@@ -42,14 +42,14 @@ beforeEach(() => {
 
 describe("equipment_types actions", () => {
   it("creates an equipment type with valid payload", async () => {
-    await expect(createEquipmentType({ name: "Máquina de Solda", description: "Equipamento para solda" })).resolves.toBeUndefined();
+    await expect(createEquipmentType({ name: "Máquina de Solda", description: "Equipamento para solda", status: "active" })).resolves.toBeUndefined();
 
-    expect(builderRef.insert).toHaveBeenCalledWith({ name: "Máquina de Solda", description: "Equipamento para solda" });
+    expect(builderRef.insert).toHaveBeenCalledWith({ name: "Máquina de Solda", description: "Equipamento para solda", status: "active" });
     expect(mockRevalidateTag).toHaveBeenCalled();
   });
 
   it("rejects invalid name", async () => {
-    await expect(createEquipmentType({ name: "", description: "Test" })).rejects.toThrow();
+    await expect(createEquipmentType({ name: "", description: "Test", status: "active" })).rejects.toThrow();
     expect(builderRef.insert).not.toHaveBeenCalled();
   });
 });

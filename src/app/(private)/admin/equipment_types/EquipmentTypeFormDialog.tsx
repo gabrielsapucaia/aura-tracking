@@ -11,6 +11,13 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import type { EquipmentTypeRecord } from "@/lib/supabase/types";
 import { equipmentTypeFormSchema, type EquipmentTypeFormValues } from "@/lib/validators/equipment_types";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -29,6 +36,7 @@ type EquipmentTypeFormDialogProps = {
 const defaultValues: EquipmentTypeFormValues = {
   name: "",
   description: "",
+  status: "active",
 };
 
 export function EquipmentTypeFormDialog({
@@ -51,6 +59,7 @@ export function EquipmentTypeFormDialog({
           ? {
               name: initialValues.name,
               description: initialValues.description || "",
+              status: initialValues.status,
             }
           : defaultValues,
       );
@@ -90,6 +99,27 @@ export function EquipmentTypeFormDialog({
                   <FormControl>
                     <Input placeholder="Descrição opcional" {...field} disabled={loading} />
                   </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="status"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Status</FormLabel>
+                  <Select onValueChange={field.onChange} value={field.value} disabled={loading}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecione" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="active">Ativo</SelectItem>
+                      <SelectItem value="inactive">Inativo</SelectItem>
+                    </SelectContent>
+                  </Select>
                   <FormMessage />
                 </FormItem>
               )}

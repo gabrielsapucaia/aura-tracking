@@ -3,6 +3,7 @@ import {
   createEquipmentType,
   deleteEquipmentType,
   listEquipmentTypes,
+  toggleEquipmentType,
   updateEquipmentType,
 } from "./actions";
 
@@ -24,6 +25,7 @@ export default async function EquipmentTypesPage() {
         data={equipmentTypes}
         onCreate={createEquipmentType}
         onUpdate={updateEquipmentType}
+        onToggle={toggleEquipmentType}
         onDelete={deleteEquipmentType}
       />
     </section>

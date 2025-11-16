@@ -85,3 +85,32 @@ export async function deleteEquipmentType(id: string | number) {
     }
   });
 }
+
+export async function toggleEquipmentType(id: string | number) {
+  const supabase = supabaseAdmin();
+
+  return mutateAndRevalidate(async () => {
+    const { data: current, error: fetchError } = await supabase
+      .from("equipment_types")
+      .select("status")
+      .eq("id", id)
+      .single();
+
+    if (fetchError) {
+      console.error("Error fetching equipment type for toggle:", fetchError);
+      throw new Error(fetchError?.message || "Failed to fetch equipment type");
+    }
+
+    const nextStatus = current?.status === "active" ? "inactive" : "active";
+
+    const { error: updateError } = await supabase
+      .from("equipment_types")
+      .update({ status: nextStatus })
+      .eq("id", id);
+
+    if (updateError) {
+      console.error("Error toggling equipment type status:", updateError);
+      throw new Error(updateError?.message || "Failed to toggle equipment type status");
+    }
+  });
+}

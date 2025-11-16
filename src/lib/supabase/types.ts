@@ -61,6 +61,7 @@ export interface Database {
           id: string | number;
           name: string;
           description: string | null;
+          status: EquipmentStatus;
           created_at: string;
           updated_at: string;
         };
@@ -68,6 +69,7 @@ export interface Database {
           id?: string | number;
           name: string;
           description?: string | null;
+          status?: EquipmentStatus;
           created_at?: string;
           updated_at?: string;
         };
@@ -75,6 +77,7 @@ export interface Database {
           id?: string | number;
           name?: string;
           description?: string | null;
+          status?: EquipmentStatus;
           created_at?: string;
           updated_at?: string;
         };

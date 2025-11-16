@@ -22,6 +22,7 @@ type EquipmentTypeRow = EquipmentTypeRecord;
 type EquipmentTypeActionInput = {
   name: string;
   description?: string;
+  status: "active" | "inactive";
 };
 
 type EquipmentTypeUpdateInput = Partial<EquipmentTypeActionInput>;
@@ -30,6 +31,7 @@ type EquipmentTypesTableProps = {
   data: EquipmentTypeRow[];
   onCreate: (input: EquipmentTypeActionInput) => Promise<void>;
   onUpdate: (id: string | number, input: EquipmentTypeUpdateInput) => Promise<void>;
+  onToggle: (id: string | number) => Promise<void>;
   onDelete: (id: string | number) => Promise<void>;
 };
 
@@ -39,28 +41,35 @@ type DialogState =
 
 type PendingAction =
   | { type: "form" }
-  | { type: "delete"; id: string | number };
+  | { type: "toggle" | "delete"; id: string | number };
 
-export function EquipmentTypesTable({ data, onCreate, onUpdate, onDelete }: EquipmentTypesTableProps) {
+export function EquipmentTypesTable({ data, onCreate, onUpdate, onToggle, onDelete }: EquipmentTypesTableProps) {
   const router = useRouter();
   const { toast } = useToast();
   const [dialogState, setDialogState] = useState<DialogState | null>(null);
   const [confirmEquipmentType, setConfirmEquipmentType] = useState<EquipmentTypeRow | null>(null);
   const [pendingAction, setPendingAction] = useState<PendingAction | null>(null);
+  const [optimistic, setOptimistic] = useState<Record<string, { status: "active" | "inactive"; loading: boolean }>>({});
 
   // UI state: search/filter/sort
   const [search, setSearch] = useState("");
-  const [sortBy, setSortBy] = useState<"name" | "created_at">("name");
+  const [statusFilter, setStatusFilter] = useState<"all" | "active" | "inactive">("all");
+  const [sortBy, setSortBy] = useState<"id" | "name" | "created_at">("id");
   const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
 
   const visibleEquipmentTypes = useMemo(() => {
     const q = search.trim().toLowerCase();
     let list = data.slice();
 
+    if (statusFilter !== "all") {
+      list = list.filter((r) => r.status === statusFilter);
+    }
+
     if (q.length > 0) {
       list = list.filter((r) => {
         return (
-          r.name.toLowerCase().includes(q) ||
+          String(r.id).toLowerCase().includes(q) ||
+          (r.name || "").toLowerCase().includes(q) ||
           (r.description || "").toLowerCase().includes(q)
         );
       });
@@ -68,15 +77,21 @@ export function EquipmentTypesTable({ data, onCreate, onUpdate, onDelete }: Equi
 
     list.sort((a, b) => {
       const dir = sortDir === "asc" ? 1 : -1;
+      if (sortBy === "id") {
+        const aNum = Number(a.id);
+        const bNum = Number(b.id);
+        if (!Number.isNaN(aNum) && !Number.isNaN(bNum)) return (aNum - bNum) * dir;
+        return String(a.id).localeCompare(String(b.id)) * dir;
+      }
       if (sortBy === "created_at") return (new Date(a.created_at).getTime() - new Date(b.created_at).getTime()) * dir;
       return a.name.localeCompare(b.name) * dir;
     });
 
     return list;
-  }, [data, search, sortBy, sortDir]);
+  }, [data, search, statusFilter, sortBy, sortDir]);
 
   const isFormLoading = pendingAction?.type === "form";
-  const isRowLoading = (id: string | number, type: "delete") => pendingAction?.type === type && pendingAction.id === id;
+  const isRowLoading = (id: string | number, type: "toggle" | "delete") => pendingAction?.type === type && pendingAction.id === id;
 
   const handleSuccess = (message: string) => {
     toast({ title: message });
@@ -124,6 +139,39 @@ export function EquipmentTypesTable({ data, onCreate, onUpdate, onDelete }: Equi
     }
   };
 
+  const handleToggle = async (equipmentType: EquipmentTypeRow) => {
+    const nextStatus = equipmentType.status === "active" ? "inactive" : "active";
+
+    // optimistic update
+    setOptimistic((s) => ({ ...s, [String(equipmentType.id)]: { status: nextStatus, loading: true } }));
+    setPendingAction({ type: "toggle", id: equipmentType.id });
+
+    try {
+      await onToggle(equipmentType.id);
+      // keep optimistic state but clear loading
+      setOptimistic((s) => ({ ...s, [String(equipmentType.id)]: { status: nextStatus, loading: false } }));
+      handleSuccess(nextStatus === "active" ? "Tipo ativado" : "Tipo desativado");
+      // allow server components to revalidate and then clear optimistic state shortly after
+      setTimeout(() => {
+        setOptimistic((s) => {
+          const copy = { ...s };
+          delete copy[String(equipmentType.id)];
+          return copy;
+        });
+      }, 800);
+    } catch (error) {
+      // revert optimistic on error
+      setOptimistic((s) => {
+        const copy = { ...s };
+        delete copy[String(equipmentType.id)];
+        return copy;
+      });
+      handleError("Erro ao alternar status", error);
+    } finally {
+      setPendingAction(null);
+    }
+  };
+
   return (
     <>
       <Card className="rounded-xl border border-gray-100 shadow-md">
@@ -135,11 +183,21 @@ export function EquipmentTypesTable({ data, onCreate, onUpdate, onDelete }: Equi
             <div className="flex items-center gap-3">
               <input
                 aria-label="Pesquisar tipos de equipamento"
-                placeholder="Pesquisar por nome ou descrição"
+                placeholder="Pesquisar por id, nome ou descrição"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 className="px-3 py-2 border rounded-md text-sm"
               />
+              <select
+                aria-label="Filtrar status"
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value as "all" | "active" | "inactive")}
+                className="px-2 py-2 border rounded-md text-sm"
+              >
+                <option value="all">Todos</option>
+                <option value="active">Ativos</option>
+                <option value="inactive">Inativos</option>
+              </select>
               <Button onClick={() => setDialogState({ mode: "create" })} size="sm">
                 <Plus className="mr-2 size-4" /> Novo tipo
               </Button>
@@ -149,6 +207,13 @@ export function EquipmentTypesTable({ data, onCreate, onUpdate, onDelete }: Equi
           <Table>
             <TableHeader>
                 <TableRow className="bg-gray-50/80 text-xs uppercase tracking-widest text-gray-500">
+                <TableHead className="cursor-pointer" onClick={() => {
+                    if (sortBy === 'id') setSortDir(d => d === 'asc' ? 'desc' : 'asc');
+                    else { setSortBy('id'); setSortDir('asc'); }
+                  }}>
+                  # {sortBy === 'id' ? (sortDir === 'asc' ? '▲' : '▼') : null}
+                </TableHead>
+                <TableHead>Status</TableHead>
                 <TableHead className="cursor-pointer" onClick={() => {
                     if (sortBy === 'name') setSortDir(d => d === 'asc' ? 'desc' : 'asc');
                     else { setSortBy('name'); setSortDir('asc'); }
@@ -168,7 +233,63 @@ export function EquipmentTypesTable({ data, onCreate, onUpdate, onDelete }: Equi
             <TableBody>
               {visibleEquipmentTypes.map((equipmentType) => (
                 <TableRow key={String(equipmentType.id)} className="border-gray-100">
-                  <TableCell className="font-semibold text-gray-800">{equipmentType.name}</TableCell>
+                  <TableCell className="font-semibold text-gray-800">{equipmentType.id ?? "—"}</TableCell>
+                  <TableCell className="text-center">
+                    {(() => {
+                      const opt = optimistic[String(equipmentType.id)];
+                      const displayStatus = opt ? opt.status : equipmentType.status;
+                      const loading = Boolean(opt?.loading) || isRowLoading(equipmentType.id, "toggle");
+
+                      return (
+                        <button
+                          role="switch"
+                          aria-checked={displayStatus === "active"}
+                          tabIndex={0}
+                          aria-label={displayStatus === "active" ? "Desativar" : "Ativar"}
+                          onClick={() => handleToggle(equipmentType)}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter" || e.key === " ") {
+                              e.preventDefault();
+                              handleToggle(equipmentType);
+                            }
+                          }}
+                          disabled={loading}
+                          className={`relative inline-flex items-center gap-3 px-3 py-1 rounded-full transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 ${
+                            displayStatus === "active"
+                              ? "bg-green-50 text-green-700 hover:bg-green-100"
+                              : "bg-red-50 text-red-700 hover:bg-red-100"
+                          }`}
+                        >
+                          <span className="relative flex items-center">
+                            <span
+                              className={`inline-block w-9 h-5 rounded-full transition-colors duration-200 ${
+                                displayStatus === "active" ? "bg-green-300" : "bg-red-300"
+                              }`}
+                            />
+                            <span
+                              className={`absolute left-0 top-1/2 -translate-y-1/2 inline-block bg-white rounded-full w-4 h-4 shadow transform transition-transform duration-200 ${
+                                displayStatus === "active" ? "translate-x-4" : "translate-x-0"
+                              }`}
+                            />
+                          </span>
+
+                          <span className="sr-only">{displayStatus === "active" ? "Ativo" : "Inativo"}</span>
+
+                          <span className="ml-2 text-xs font-medium" aria-live="polite">
+                            {loading ? (
+                              <svg className="animate-spin w-4 h-4 text-current" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
+                              </svg>
+                            ) : (
+                              <span>{displayStatus === "active" ? "Ativo" : "Inativo"}</span>
+                            )}
+                          </span>
+                        </button>
+                      );
+                    })()}
+                  </TableCell>
+                  <TableCell className="text-gray-700">{equipmentType.name}</TableCell>
                   <TableCell className="text-gray-700">{equipmentType.description || "—"}</TableCell>
                   <TableCell className="text-gray-500">
                     {equipmentType.created_at ? formatter.format(new Date(equipmentType.created_at)) : "—"}
@@ -201,7 +322,7 @@ export function EquipmentTypesTable({ data, onCreate, onUpdate, onDelete }: Equi
               ))}
               {visibleEquipmentTypes.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={4} className="py-12 text-center text-sm text-gray-400">
+                  <TableCell colSpan={6} className="py-12 text-center text-sm text-gray-400">
                     Nenhum tipo de equipamento encontrado
                   </TableCell>
                 </TableRow>
