@@ -244,8 +244,17 @@ export function OperatorsTable({ data, onCreate, onUpdate, onToggle, onDelete }:
 
                       return (
                         <button
+                          role="switch"
+                          aria-checked={displayStatus === "active"}
+                          tabIndex={0}
                           aria-label={displayStatus === "active" ? "Desativar" : "Ativar"}
                           onClick={() => handleToggle(operator)}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter" || e.key === " ") {
+                              e.preventDefault();
+                              handleToggle(operator);
+                            }
+                          }}
                           disabled={loading}
                           className={`relative inline-flex items-center gap-3 px-3 py-1 rounded-full transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 ${
                             displayStatus === "active"
@@ -268,7 +277,7 @@ export function OperatorsTable({ data, onCreate, onUpdate, onToggle, onDelete }:
 
                           <span className="sr-only">{displayStatus === "active" ? "Ativo" : "Inativo"}</span>
 
-                          <span className="ml-2 text-xs font-medium">
+                          <span className="ml-2 text-xs font-medium" aria-live="polite">
                             {loading ? (
                               <svg className="animate-spin w-4 h-4 text-current" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                                 <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
