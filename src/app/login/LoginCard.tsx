@@ -75,8 +75,8 @@ export function LoginCard() {
   return (
     <div className="mx-auto w-full max-w-md rounded-2xl border border-white/10 bg-white/5 p-8 text-white shadow-2xl backdrop-blur">
       <div className="mb-6 text-center">
-        <p className="text-xs uppercase tracking-[0.35em] text-white/60">Aura</p>
-        <h1 className="text-2xl font-semibold">Minimal Dashboard</h1>
+        <p className="text-xs uppercase tracking-[0.35em] text-white/60">Aura Tracking</p>
+        <h1 className="text-2xl font-semibold">Painel operacional</h1>
         <p className="mt-2 text-sm text-white/70">Entre com seu e-mail corporativo.</p>
       </div>
 

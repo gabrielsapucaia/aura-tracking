@@ -1,6 +1,17 @@
-## Aura Dashboard
+# Aura Tracking
 
-Internal operations dashboard built with Next.js App Router, Supabase, and Tailwind. Upcoming work adds secure Microsoft OAuth login plus role-based access control (RBAC) so that only authorized operators can change sensitive data.
+Aura Tracking is the internal operations dashboard for monitoring equipment health and operator activity. It is built with the Next.js App Router, Supabase, and the Tailwind v4 runtime.
+
+### Brand Palette
+
+| Token | Hex |
+| --- | --- |
+| Primary (mid navy) | `#2D3D70` |
+| Deep Navy | `#18213D` |
+| Accent Coral | `#F4614D` |
+| Highlight Teal | `#00A195` |
+| Mist Grey | `#AAB1BB` |
+| Graphite | `#4D5054` |
 
 ## Requirements
 

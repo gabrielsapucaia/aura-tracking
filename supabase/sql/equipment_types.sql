@@ -1,4 +1,4 @@
--- Aura Dashboard Equipment Types schema + policies
+-- Aura Tracking equipment types schema + policies
 
 create extension if not exists "uuid-ossp";
 create extension if not exists "pgcrypto";

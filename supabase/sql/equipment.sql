@@ -1,4 +1,4 @@
--- Aura Dashboard Equipment schema + policies
+-- Aura Tracking equipment schema + policies
 
 create table if not exists public.equipment (
   id uuid primary key default gen_random_uuid(),

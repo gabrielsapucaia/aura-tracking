@@ -1,4 +1,4 @@
--- User roles + permissions bootstrap
+-- Aura Tracking user roles + permissions bootstrap
 
 create type if not exists public.user_role as enum ('admin', 'supervisor', 'user');
 

@@ -1,4 +1,4 @@
--- Aura Dashboard Operators schema + policies
+-- Aura Tracking operators schema + policies
 
 create extension if not exists "uuid-ossp";
 create extension if not exists "pgcrypto";
