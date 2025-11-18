@@ -2,13 +2,14 @@
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutDashboard, Settings, Users, Wrench, Tag, Package } from "lucide-react";
+import { LayoutDashboard, Settings, Users, Wrench, Tag, Package, FileCheck } from "lucide-react";
 
 const items = [
   { href: "/dashboard", icon: LayoutDashboard, label: "Dashboard" },
   { href: "/admin/operators", icon: Users, label: "Operadores" },
   { href: "/admin/equipment_types", icon: Tag, label: "Tipos de Equipamento" },
   { href: "/admin/material_types", icon: Package, label: "Tipos de Material" },
+  { href: "/admin/releases", icon: FileCheck, label: "Liberações" },
   { href: "/admin/equipment", icon: Wrench, label: "Equipamentos" },
   { href: "/settings", icon: Settings, label: "Configurações" },
 ];

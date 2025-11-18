@@ -150,6 +150,46 @@ export interface Database {
         };
         Relationships: [];
       };
+      releases: {
+        Row: {
+          id: number;
+          quota: number;
+          sequence: number;
+          material_type_id: number;
+          status: EquipmentStatus;
+          created_at: string;
+          updated_at: string;
+          material_types?: {
+            name: string;
+          } | null;
+        };
+        Insert: {
+          id?: number;
+          quota: number;
+          sequence: number;
+          material_type_id: number;
+          status?: EquipmentStatus;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: number;
+          quota?: number;
+          sequence?: number;
+          material_type_id?: number;
+          status?: EquipmentStatus;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "releases_material_type_id_fkey";
+            columns: ["material_type_id"];
+            referencedRelation: "material_types";
+            referencedColumns: ["id"];
+          }
+        ];
+      };
     };
     Views: Record<string, never>;
     Functions: {
@@ -178,3 +218,4 @@ export type OperatorRecord = Database["public"]["Tables"]["operators"]["Row"];
 export type EquipmentTypeRecord = Database["public"]["Tables"]["equipment_types"]["Row"];
 export type EquipmentRecord = Database["public"]["Tables"]["equipment"]["Row"];
 export type MaterialTypeRecord = Database["public"]["Tables"]["material_types"]["Row"];
+export type ReleaseRecord = Database["public"]["Tables"]["releases"]["Row"];
