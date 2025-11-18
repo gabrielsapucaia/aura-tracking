@@ -8,7 +8,9 @@ export default function PrivateLayout({ children }: { children: ReactNode }) {
       <Sidebar />
       <div className="flex-1">
         <Topbar />
-        <main className="p-6">{children}</main>
+        <main className="p-6 flex justify-center">
+          <div className="w-full max-w-6xl">{children}</div>
+        </main>
       </div>
     </div>
   );
