@@ -123,6 +123,36 @@ export interface Database {
           }
         ];
       };
+      material_types: {
+        Row: {
+          id: string;
+          name: string;
+          description: string | null;
+          status: EquipmentStatus;
+          created_at: string;
+          updated_at: string;
+          seq_id?: number | null;
+        };
+        Insert: {
+          id?: string;
+          name: string;
+          description?: string | null;
+          status?: EquipmentStatus;
+          created_at?: string;
+          updated_at?: string;
+          seq_id?: number | null;
+        };
+        Update: {
+          id?: string;
+          name?: string;
+          description?: string | null;
+          status?: EquipmentStatus;
+          created_at?: string;
+          updated_at?: string;
+          seq_id?: number | null;
+        };
+        Relationships: [];
+      };
     };
     Views: Record<string, never>;
     Functions: {
@@ -150,3 +180,4 @@ export interface Database {
 export type OperatorRecord = Database["public"]["Tables"]["operators"]["Row"];
 export type EquipmentTypeRecord = Database["public"]["Tables"]["equipment_types"]["Row"];
 export type EquipmentRecord = Database["public"]["Tables"]["equipment"]["Row"];
+export type MaterialTypeRecord = Database["public"]["Tables"]["material_types"]["Row"];
