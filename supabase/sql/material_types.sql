@@ -1,5 +1,14 @@
 -- Aura Tracking material types schema + policies
 
+-- Create the set_updated_at function if it doesn't exist
+create or replace function public.set_updated_at()
+returns trigger as $$
+begin
+  new.updated_at := timezone('utc', now());
+  return new;
+end;
+$$ language plpgsql;
+
 create table if not exists public.material_types (
   id uuid primary key default gen_random_uuid(),
   seq_id bigint generated always as identity unique,
