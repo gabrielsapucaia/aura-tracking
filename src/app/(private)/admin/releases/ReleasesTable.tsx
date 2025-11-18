@@ -80,7 +80,10 @@ export function ReleasesTable({ data, materialTypes, onCreate, onUpdate, onToggl
         return (
           String(r.id).toLowerCase().includes(q) ||
           code.toLowerCase().includes(q) ||
-          materialTypeName.toLowerCase().includes(q)
+          materialTypeName.toLowerCase().includes(q) ||
+          String(r.planned_mass).toLowerCase().includes(q) ||
+          String(r.model_grade).toLowerCase().includes(q) ||
+          String(r.planned_grade).toLowerCase().includes(q)
         );
       });
     }
@@ -261,6 +264,9 @@ export function ReleasesTable({ data, materialTypes, onCreate, onUpdate, onToggl
               </TableHead>
               <TableHead className="w-32 text-center">Status</TableHead>
               <TableHead>Código</TableHead>
+              <TableHead>Massa Plano (t)</TableHead>
+              <TableHead>Teor Modelo (g/t)</TableHead>
+              <TableHead>Teor Plano (g/t)</TableHead>
               <TableHead
                 className="cursor-pointer"
                 onClick={() => {
@@ -338,6 +344,9 @@ export function ReleasesTable({ data, materialTypes, onCreate, onUpdate, onToggl
                 <TableCell className="text-gray-800 font-mono">
                   {release.quota}-{release.sequence.toString().padStart(4, '0')}-{materialTypes.find(mt => mt.id === release.material_type_id)?.name || "—"}
                 </TableCell>
+                <TableCell className="text-gray-800">{release.planned_mass ? release.planned_mass.toFixed(2) : "—"}</TableCell>
+                <TableCell className="text-gray-800">{release.model_grade ? release.model_grade.toFixed(2) : "—"}</TableCell>
+                <TableCell className="text-gray-800">{release.planned_grade ? release.planned_grade.toFixed(2) : "—"}</TableCell>
                 <TableCell className="text-gray-500">
                   {release.created_at ? formatter.format(new Date(release.created_at)) : "—"}
                 </TableCell>
@@ -368,7 +377,7 @@ export function ReleasesTable({ data, materialTypes, onCreate, onUpdate, onToggl
             ))}
             {visibleReleases.length === 0 && (
               <TableRow>
-                <TableCell colSpan={6} className="py-12 text-center text-sm text-gray-400">
+                <TableCell colSpan={9} className="py-12 text-center text-sm text-gray-400">
                   Nenhuma liberação encontrada
                 </TableCell>
               </TableRow>

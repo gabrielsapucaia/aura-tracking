@@ -5,6 +5,9 @@ create table if not exists public.releases (
   quota integer not null,
   sequence integer not null,
   material_type_id bigint references public.material_types(id) on delete cascade,
+  planned_mass decimal(10,2),
+  model_grade decimal(10,2),
+  planned_grade decimal(10,2),
   status equipment_status not null default 'active',
   created_at timestamptz not null default timezone('utc', now()),
   updated_at timestamptz not null default timezone('utc', now())

@@ -156,6 +156,9 @@ export interface Database {
           quota: number;
           sequence: number;
           material_type_id: number;
+          planned_mass: number | null;
+          model_grade: number | null;
+          planned_grade: number | null;
           status: EquipmentStatus;
           created_at: string;
           updated_at: string;
@@ -168,6 +171,9 @@ export interface Database {
           quota: number;
           sequence: number;
           material_type_id: number;
+          planned_mass?: number | null;
+          model_grade?: number | null;
+          planned_grade?: number | null;
           status?: EquipmentStatus;
           created_at?: string;
           updated_at?: string;
@@ -177,6 +183,9 @@ export interface Database {
           quota?: number;
           sequence?: number;
           material_type_id?: number;
+          planned_mass?: number | null;
+          model_grade?: number | null;
+          planned_grade?: number | null;
           status?: EquipmentStatus;
           created_at?: string;
           updated_at?: string;

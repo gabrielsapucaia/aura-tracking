@@ -38,6 +38,9 @@ const defaultValues: ReleaseFormValues = {
   quota: 0,
   sequence: 0,
   material_type_id: 0,
+  planned_mass: undefined,
+  model_grade: undefined,
+  planned_grade: undefined,
   status: "active",
 };
 
@@ -137,6 +140,66 @@ export function ReleaseFormDialog({
                       ))}
                     </SelectContent>
                   </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="planned_mass"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Massa Plano (t)</FormLabel>
+                  <FormControl>
+                    <Input
+                      type="number"
+                      step="0.01"
+                      {...field}
+                      value={field.value || ""}
+                      onChange={(e) => field.onChange(e.target.value ? parseFloat(e.target.value) : undefined)}
+                      disabled={loading}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="model_grade"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Teor Modelo (g/t)</FormLabel>
+                  <FormControl>
+                    <Input
+                      type="number"
+                      step="0.01"
+                      {...field}
+                      value={field.value || ""}
+                      onChange={(e) => field.onChange(e.target.value ? parseFloat(e.target.value) : undefined)}
+                      disabled={loading}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="planned_grade"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Teor Plano (g/t)</FormLabel>
+                  <FormControl>
+                    <Input
+                      type="number"
+                      step="0.01"
+                      {...field}
+                      value={field.value || ""}
+                      onChange={(e) => field.onChange(e.target.value ? parseFloat(e.target.value) : undefined)}
+                      disabled={loading}
+                    />
+                  </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
