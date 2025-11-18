@@ -284,6 +284,7 @@ export function ReleasesTable({ data, materialTypes, onCreate, onUpdate, onToggl
               >
                 Sequência {sortBy === "sequence" ? (sortDir === "asc" ? "▲" : "▼") : null}
               </TableHead>
+              <TableHead>Código</TableHead>
               <TableHead>Tipo de Material</TableHead>
               <TableHead
                 className="cursor-pointer"
@@ -360,7 +361,10 @@ export function ReleasesTable({ data, materialTypes, onCreate, onUpdate, onToggl
                   })()}
                 </TableCell>
                 <TableCell className="text-gray-800">{release.quota}</TableCell>
-                <TableCell className="text-gray-800">{release.sequence}</TableCell>
+                <TableCell className="text-gray-800">{release.sequence.toString().padStart(4, '0')}</TableCell>
+                <TableCell className="text-gray-800 font-mono">
+                  {release.quota}-{release.sequence.toString().padStart(4, '0')}-{materialTypes.find(mt => mt.id === release.material_type_id)?.name || "—"}
+                </TableCell>
                 <TableCell className="text-gray-700">
                   {materialTypes.find(mt => mt.id === release.material_type_id)?.name || "—"}
                 </TableCell>
@@ -394,7 +398,7 @@ export function ReleasesTable({ data, materialTypes, onCreate, onUpdate, onToggl
             ))}
             {visibleReleases.length === 0 && (
               <TableRow>
-                <TableCell colSpan={7} className="py-12 text-center text-sm text-gray-400">
+                <TableCell colSpan={8} className="py-12 text-center text-sm text-gray-400">
                   Nenhuma liberação encontrada
                 </TableCell>
               </TableRow>
