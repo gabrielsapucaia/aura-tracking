@@ -1,6 +1,7 @@
 "use server";
 
 import { supabaseAdmin } from "@/lib/supabase/admin";
+import type { EquipmentRecord, OperatorRecord } from "@/lib/supabase/types";
 import { unstable_cache } from "next/cache";
 
 const DASHBOARD_TAG = "dashboard:data";
@@ -25,7 +26,6 @@ export const getDashboardData = unstable_cache(
     const activeEquipment = equipment.filter(e => e.status === 'active').length;
     const totalOperators = operators.length;
     const activeOperators = operators.filter(o => o.status === 'active').length;
-    const totalTypes = types.length;
 
     // Equipment by type
     const equipmentByType = types.map(type => {
@@ -42,27 +42,32 @@ export const getDashboardData = unstable_cache(
     const inactiveOps = totalOperators - activeOps;
 
     // Latest updates: recent equipment and operators
-    const recentEquipment = equipment
+    const recentEquipmentItems = equipment
       .sort((a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime())
       .slice(0, 3)
       .map(e => ({
-        title: `Equipment ${e.tag} updated`,
-        status: e.status as 'active' | 'inactive' | 'pending',
-        time: formatTimeAgo(e.updated_at),
+        item: e,
+        type: 'equipment' as const,
+        date: e.updated_at,
       }));
 
-    const recentOperators = operators
+    const recentOperatorItems = operators
       .sort((a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime())
       .slice(0, 3)
       .map(o => ({
-        title: `Operator ${o.name} updated`,
-        status: o.status as 'active' | 'inactive' | 'pending',
-        time: formatTimeAgo(o.updated_at),
+        item: o,
+        type: 'operator' as const,
+        date: o.updated_at,
       }));
 
-    const latestUpdates = [...recentEquipment, ...recentOperators]
-      .sort((a, b) => new Date(b.time).getTime() - new Date(a.time).getTime()) // Need better sorting
-      .slice(0, 3);
+    const latestUpdates = [...recentEquipmentItems, ...recentOperatorItems]
+      .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+      .slice(0, 3)
+      .map(({ item, type }) => ({
+        title: type === 'equipment' ? `Equipment ${(item as EquipmentRecord).tag} updated` : `Operator ${(item as OperatorRecord).name} updated`,
+        status: item.status as 'active' | 'inactive' | 'pending',
+        time: formatTimeAgo(item.updated_at),
+      }));
 
     return {
       kpis: [
