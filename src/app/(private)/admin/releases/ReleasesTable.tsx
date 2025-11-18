@@ -61,7 +61,7 @@ export function ReleasesTable({ data, materialTypes, onCreate, onUpdate, onToggl
   // UI state: search/filter/sort
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<"all" | "active" | "inactive">("all");
-  const [sortBy, setSortBy] = useState<"id" | "quota" | "sequence" | "created_at">("id");
+  const [sortBy, setSortBy] = useState<"id" | "quota" | "sequence" | "planned_mass" | "model_grade" | "planned_grade" | "created_at">("id");
   const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
   const didSyncToast = useRef(false);
 
@@ -98,6 +98,21 @@ export function ReleasesTable({ data, materialTypes, onCreate, onUpdate, onToggl
       }
       if (sortBy === "sequence") {
         return (a.sequence - b.sequence) * dir;
+      }
+      if (sortBy === "planned_mass") {
+        const aVal = a.planned_mass || 0;
+        const bVal = b.planned_mass || 0;
+        return (aVal - bVal) * dir;
+      }
+      if (sortBy === "model_grade") {
+        const aVal = a.model_grade || 0;
+        const bVal = b.model_grade || 0;
+        return (aVal - bVal) * dir;
+      }
+      if (sortBy === "planned_grade") {
+        const aVal = a.planned_grade || 0;
+        const bVal = b.planned_grade || 0;
+        return (aVal - bVal) * dir;
       }
       if (sortBy === "created_at") return (new Date(a.created_at).getTime() - new Date(b.created_at).getTime()) * dir;
       return 0;
@@ -263,10 +278,54 @@ export function ReleasesTable({ data, materialTypes, onCreate, onUpdate, onToggl
                 # {sortBy === "id" ? (sortDir === "asc" ? "▲" : "▼") : null}
               </TableHead>
               <TableHead className="w-32 text-center">Status</TableHead>
-              <TableHead>Código</TableHead>
-              <TableHead>Massa Plano (t)</TableHead>
-              <TableHead>Teor Modelo (g/t)</TableHead>
-              <TableHead>Teor Plano (g/t)</TableHead>
+              <TableHead
+                className="cursor-pointer"
+                onClick={() => {
+                  if (sortBy === "quota") setSortDir((d) => (d === "asc" ? "desc" : "asc"));
+                  else {
+                    setSortBy("quota");
+                    setSortDir("asc");
+                  }
+                }}
+              >
+                Código {sortBy === "quota" ? (sortDir === "asc" ? "▲" : "▼") : null}
+              </TableHead>
+              <TableHead
+                className="cursor-pointer"
+                onClick={() => {
+                  if (sortBy === "planned_mass") setSortDir((d) => (d === "asc" ? "desc" : "asc"));
+                  else {
+                    setSortBy("planned_mass");
+                    setSortDir("asc");
+                  }
+                }}
+              >
+                Massa Plano (t) {sortBy === "planned_mass" ? (sortDir === "asc" ? "▲" : "▼") : null}
+              </TableHead>
+              <TableHead
+                className="cursor-pointer"
+                onClick={() => {
+                  if (sortBy === "model_grade") setSortDir((d) => (d === "asc" ? "desc" : "asc"));
+                  else {
+                    setSortBy("model_grade");
+                    setSortDir("asc");
+                  }
+                }}
+              >
+                Teor Modelo (g/t) {sortBy === "model_grade" ? (sortDir === "asc" ? "▲" : "▼") : null}
+              </TableHead>
+              <TableHead
+                className="cursor-pointer"
+                onClick={() => {
+                  if (sortBy === "planned_grade") setSortDir((d) => (d === "asc" ? "desc" : "asc"));
+                  else {
+                    setSortBy("planned_grade");
+                    setSortDir("asc");
+                  }
+                }}
+              >
+                Teor Plano (g/t) {sortBy === "planned_grade" ? (sortDir === "asc" ? "▲" : "▼") : null}
+              </TableHead>
               <TableHead
                 className="cursor-pointer"
                 onClick={() => {

@@ -59,7 +59,7 @@ export function OperatorsTable({ data, onCreate, onUpdate, onToggle, onDelete }:
   // UI state: search/filter/sort
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<"all" | "active" | "inactive">("all");
-  const [sortBy, setSortBy] = useState<"id" | "name" | "created_at">("id");
+  const [sortBy, setSortBy] = useState<"id" | "name" | "pin" | "created_at">("id");
   const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
   const didSyncToast = useRef(false);
 
@@ -84,8 +84,10 @@ export function OperatorsTable({ data, onCreate, onUpdate, onToggle, onDelete }:
     list.sort((a, b) => {
       const dir = sortDir === "asc" ? 1 : -1;
       if (sortBy === "id") return (a.id - b.id) * dir;
+      if (sortBy === "name") return a.name.localeCompare(b.name) * dir;
+      if (sortBy === "pin") return a.pin.localeCompare(b.pin) * dir;
       if (sortBy === "created_at") return (new Date(a.created_at).getTime() - new Date(b.created_at).getTime()) * dir;
-      return a.name.localeCompare(b.name) * dir;
+      return 0;
     });
 
     return list;
@@ -258,7 +260,18 @@ export function OperatorsTable({ data, onCreate, onUpdate, onToggle, onDelete }:
               >
                 Nome {sortBy === "name" ? (sortDir === "asc" ? "▲" : "▼") : null}
               </TableHead>
-              <TableHead className="w-28 text-center">PIN</TableHead>
+              <TableHead
+                className="w-28 cursor-pointer text-center"
+                onClick={() => {
+                  if (sortBy === "pin") setSortDir((d) => (d === "asc" ? "desc" : "asc"));
+                  else {
+                    setSortBy("pin");
+                    setSortDir("asc");
+                  }
+                }}
+              >
+                PIN {sortBy === "pin" ? (sortDir === "asc" ? "▲" : "▼") : null}
+              </TableHead>
               <TableHead
                 className="cursor-pointer"
                 onClick={() => {

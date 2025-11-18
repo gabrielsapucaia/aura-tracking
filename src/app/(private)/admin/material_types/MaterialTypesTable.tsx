@@ -59,7 +59,7 @@ export function MaterialTypesTable({ data, onCreate, onUpdate, onToggle, onDelet
   // UI state: search/filter/sort
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<"all" | "active" | "inactive">("all");
-  const [sortBy, setSortBy] = useState<"id" | "name" | "created_at">("id");
+  const [sortBy, setSortBy] = useState<"id" | "name" | "description" | "created_at">("id");
   const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
   const didSyncToast = useRef(false);
 
@@ -89,8 +89,10 @@ export function MaterialTypesTable({ data, onCreate, onUpdate, onToggle, onDelet
         if (!Number.isNaN(aNum) && !Number.isNaN(bNum)) return (aNum - bNum) * dir;
         return String(a.id).localeCompare(String(b.id)) * dir;
       }
+      if (sortBy === "name") return a.name.localeCompare(b.name) * dir;
+      if (sortBy === "description") return (a.description || "").localeCompare(b.description || "") * dir;
       if (sortBy === "created_at") return (new Date(a.created_at).getTime() - new Date(b.created_at).getTime()) * dir;
-      return a.name.localeCompare(b.name) * dir;
+      return 0;
     });
 
     return list;
@@ -264,7 +266,18 @@ export function MaterialTypesTable({ data, onCreate, onUpdate, onToggle, onDelet
               >
                 Tipo Material {sortBy === "name" ? (sortDir === "asc" ? "▲" : "▼") : null}
               </TableHead>
-              <TableHead>Descritivo</TableHead>
+              <TableHead
+                className="cursor-pointer"
+                onClick={() => {
+                  if (sortBy === "description") setSortDir((d) => (d === "asc" ? "desc" : "asc"));
+                  else {
+                    setSortBy("description");
+                    setSortDir("asc");
+                  }
+                }}
+              >
+                Descritivo {sortBy === "description" ? (sortDir === "asc" ? "▲" : "▼") : null}
+              </TableHead>
               <TableHead
                 className="cursor-pointer"
                 onClick={() => {

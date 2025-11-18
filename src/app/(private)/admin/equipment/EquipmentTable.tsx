@@ -62,7 +62,7 @@ export function EquipmentTable({ data, onCreate, onUpdate, onToggle, onDelete }:
   // UI state: search/filter/sort
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<"all" | "active" | "inactive">("all");
-  const [sortBy, setSortBy] = useState<"id" | "tag" | "created_at">("id");
+  const [sortBy, setSortBy] = useState<"id" | "tag" | "type" | "created_at">("id");
   const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
   const didSyncToast = useRef(false);
 
@@ -87,8 +87,10 @@ export function EquipmentTable({ data, onCreate, onUpdate, onToggle, onDelete }:
     list.sort((a, b) => {
       const dir = sortDir === "asc" ? 1 : -1;
       if (sortBy === "id") return String(a.id).localeCompare(String(b.id)) * dir;
+      if (sortBy === "tag") return a.tag.localeCompare(b.tag) * dir;
+      if (sortBy === "type") return (a.equipment_types?.name || "").localeCompare(b.equipment_types?.name || "") * dir;
       if (sortBy === "created_at") return (new Date(a.created_at).getTime() - new Date(b.created_at).getTime()) * dir;
-      return a.tag.localeCompare(b.tag) * dir;
+      return 0;
     });
 
     return list;
@@ -265,7 +267,18 @@ export function EquipmentTable({ data, onCreate, onUpdate, onToggle, onDelete }:
               >
                 Tag {sortBy === "tag" ? (sortDir === "asc" ? "▲" : "▼") : null}
               </TableHead>
-              <TableHead>Tipo</TableHead>
+              <TableHead
+                className="cursor-pointer"
+                onClick={() => {
+                  if (sortBy === "type") setSortDir((d) => (d === "asc" ? "desc" : "asc"));
+                  else {
+                    setSortBy("type");
+                    setSortDir("asc");
+                  }
+                }}
+              >
+                Tipo {sortBy === "type" ? (sortDir === "asc" ? "▲" : "▼") : null}
+              </TableHead>
               <TableHead
                 className="cursor-pointer"
                 onClick={() => {
