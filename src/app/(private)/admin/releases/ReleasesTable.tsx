@@ -76,10 +76,10 @@ export function ReleasesTable({ data, materialTypes, onCreate, onUpdate, onToggl
     if (q.length > 0) {
       list = list.filter((r) => {
         const materialTypeName = materialTypes.find(mt => mt.id === r.material_type_id)?.name || "";
+        const code = `${r.quota}-${r.sequence.toString().padStart(4, '0')}-${materialTypeName}`;
         return (
           String(r.id).toLowerCase().includes(q) ||
-          String(r.quota).toLowerCase().includes(q) ||
-          String(r.sequence).toLowerCase().includes(q) ||
+          code.toLowerCase().includes(q) ||
           materialTypeName.toLowerCase().includes(q)
         );
       });
@@ -260,32 +260,7 @@ export function ReleasesTable({ data, materialTypes, onCreate, onUpdate, onToggl
                 # {sortBy === "id" ? (sortDir === "asc" ? "▲" : "▼") : null}
               </TableHead>
               <TableHead className="w-32 text-center">Status</TableHead>
-              <TableHead
-                className="cursor-pointer"
-                onClick={() => {
-                  if (sortBy === "quota") setSortDir((d) => (d === "asc" ? "desc" : "asc"));
-                  else {
-                    setSortBy("quota");
-                    setSortDir("asc");
-                  }
-                }}
-              >
-                Cota {sortBy === "quota" ? (sortDir === "asc" ? "▲" : "▼") : null}
-              </TableHead>
-              <TableHead
-                className="cursor-pointer"
-                onClick={() => {
-                  if (sortBy === "sequence") setSortDir((d) => (d === "asc" ? "desc" : "asc"));
-                  else {
-                    setSortBy("sequence");
-                    setSortDir("asc");
-                  }
-                }}
-              >
-                Sequência {sortBy === "sequence" ? (sortDir === "asc" ? "▲" : "▼") : null}
-              </TableHead>
               <TableHead>Código</TableHead>
-              <TableHead>Tipo de Material</TableHead>
               <TableHead
                 className="cursor-pointer"
                 onClick={() => {
@@ -360,13 +335,8 @@ export function ReleasesTable({ data, materialTypes, onCreate, onUpdate, onToggl
                     );
                   })()}
                 </TableCell>
-                <TableCell className="text-gray-800">{release.quota}</TableCell>
-                <TableCell className="text-gray-800">{release.sequence.toString().padStart(4, '0')}</TableCell>
                 <TableCell className="text-gray-800 font-mono">
                   {release.quota}-{release.sequence.toString().padStart(4, '0')}-{materialTypes.find(mt => mt.id === release.material_type_id)?.name || "—"}
-                </TableCell>
-                <TableCell className="text-gray-700">
-                  {materialTypes.find(mt => mt.id === release.material_type_id)?.name || "—"}
                 </TableCell>
                 <TableCell className="text-gray-500">
                   {release.created_at ? formatter.format(new Date(release.created_at)) : "—"}
@@ -398,7 +368,7 @@ export function ReleasesTable({ data, materialTypes, onCreate, onUpdate, onToggl
             ))}
             {visibleReleases.length === 0 && (
               <TableRow>
-                <TableCell colSpan={8} className="py-12 text-center text-sm text-gray-400">
+                <TableCell colSpan={6} className="py-12 text-center text-sm text-gray-400">
                   Nenhuma liberação encontrada
                 </TableCell>
               </TableRow>
