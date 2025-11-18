@@ -16,7 +16,7 @@ returns text language sql stable as $$
 $$;
 
 create table if not exists public.material_types (
-  id uuid primary key default gen_random_uuid(),
+  id bigint primary key generated always as identity,
   name text not null unique,
   description text,
   status equipment_status not null default 'active',

@@ -125,7 +125,7 @@ export interface Database {
       };
       material_types: {
         Row: {
-          id: string;
+          id: number;
           name: string;
           description: string | null;
           status: EquipmentStatus;
@@ -133,7 +133,7 @@ export interface Database {
           updated_at: string;
         };
         Insert: {
-          id?: string;
+          id?: number;
           name: string;
           description?: string | null;
           status?: EquipmentStatus;
@@ -141,7 +141,7 @@ export interface Database {
           updated_at?: string;
         };
         Update: {
-          id?: string;
+          id?: number;
           name?: string;
           description?: string | null;
           status?: EquipmentStatus;
