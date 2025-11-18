@@ -84,7 +84,7 @@ export function MaterialTypeFormDialog({
                 <FormItem>
                   <FormLabel>Tipo Material</FormLabel>
                   <FormControl>
-                    <Input placeholder="Ex: Aço Inox" {...field} disabled={loading} />
+                    <Input {...field} disabled={loading} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
