@@ -9,6 +9,12 @@ begin
 end;
 $$ language plpgsql;
 
+-- Create the jwt_role function if it doesn't exist
+create or replace function public.jwt_role()
+returns text language sql stable as $$
+  select coalesce(current_setting('request.jwt.claims', true)::json->>'role', '')
+$$;
+
 create table if not exists public.material_types (
   id uuid primary key default gen_random_uuid(),
   seq_id bigint generated always as identity unique,
