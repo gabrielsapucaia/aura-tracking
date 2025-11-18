@@ -131,7 +131,6 @@ export interface Database {
           status: EquipmentStatus;
           created_at: string;
           updated_at: string;
-          seq_id?: number | null;
         };
         Insert: {
           id?: string;
@@ -140,7 +139,6 @@ export interface Database {
           status?: EquipmentStatus;
           created_at?: string;
           updated_at?: string;
-          seq_id?: number | null;
         };
         Update: {
           id?: string;
@@ -149,7 +147,6 @@ export interface Database {
           status?: EquipmentStatus;
           created_at?: string;
           updated_at?: string;
-          seq_id?: number | null;
         };
         Relationships: [];
       };

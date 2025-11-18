@@ -17,7 +17,6 @@ $$;
 
 create table if not exists public.material_types (
   id uuid primary key default gen_random_uuid(),
-  seq_id bigint generated always as identity unique,
   name text not null unique,
   description text,
   status equipment_status not null default 'active',
